@@ -2826,6 +2826,7 @@ static gboolean
 client_tag_allowed (server *serv, const char *tag)
 {
 	char **deny;
+	gboolean blocked = FALSE;
 	int i;
 
 	if (!serv->have_message_tags)
@@ -2837,15 +2838,16 @@ client_tag_allowed (server *serv, const char *tag)
 	deny = g_strsplit (serv->clienttagdeny, ",", 0);
 	for (i = 0; deny[i]; i++)
 	{
-		if (!strcmp (deny[i], "*") || !strcmp (deny[i], tag) || (deny[i][0] == '+' && !strcmp (deny[i] + 1, tag)))
-		{
-			g_strfreev (deny);
-			return FALSE;
-		}
+		if (!strcmp (deny[i], "*"))
+			blocked = TRUE;
+		else if (deny[i][0] == '-' && !strcmp (deny[i] + 1, tag))
+			blocked = FALSE;
+		else if (!strcmp (deny[i], tag) || (deny[i][0] == '+' && !strcmp (deny[i] + 1, tag)))
+			blocked = TRUE;
 	}
 
 	g_strfreev (deny);
-	return TRUE;
+	return !blocked;
 }
 
 static char *

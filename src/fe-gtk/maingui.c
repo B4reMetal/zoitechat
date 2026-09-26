@@ -778,10 +778,13 @@ mg_inputbox_focus (GtkWidget *widget, GdkEventFocus *event, session_gui *gui)
 }
 
 
+#define TYPING_THROTTLE_USEC (3 * G_USEC_PER_SEC)
+
 static gboolean
 mg_client_tag_allowed (server *serv, const char *tag)
 {
         char **deny;
+        gboolean blocked = FALSE;
         int i;
 
         if (!serv->have_message_tags)
@@ -793,30 +796,42 @@ mg_client_tag_allowed (server *serv, const char *tag)
         deny = g_strsplit (serv->clienttagdeny, ",", 0);
         for (i = 0; deny[i]; i++)
         {
-                if (!strcmp (deny[i], "*") || !strcmp (deny[i], tag) || (deny[i][0] == '+' && !strcmp (deny[i] + 1, tag)))
-                {
-                        g_strfreev (deny);
-                        return FALSE;
-                }
+                if (!strcmp (deny[i], "*"))
+                        blocked = TRUE;
+                else if (deny[i][0] == '-' && !strcmp (deny[i] + 1, tag))
+                        blocked = FALSE;
+                else if (!strcmp (deny[i], tag) || (deny[i][0] == '+' && !strcmp (deny[i] + 1, tag)))
+                        blocked = TRUE;
         }
 
         g_strfreev (deny);
-        return TRUE;
+        return !blocked;
 }
 
-static void
+static gboolean
+mg_typing_can_send (session *sess)
+{
+        gint64 now = g_get_monotonic_time ();
+
+        return sess->typing_last_sent == 0 ||
+               now - sess->typing_last_sent >= TYPING_THROTTLE_USEC;
+}
+
+static gboolean
 mg_send_typing (session *sess, const char *state)
 {
         char tags[32];
 
         if (!sess || !sess->server->connected || !mg_client_tag_allowed (sess->server, "typing") || !sess->channel[0])
-                return;
+                return FALSE;
 
         if (sess->type != SESS_CHANNEL && sess->type != SESS_DIALOG)
-                return;
+                return FALSE;
 
         g_snprintf (tags, sizeof (tags), "+typing=%s", state);
         sess->server->p_tagmsg (sess->server, tags, sess->channel);
+        sess->typing_last_sent = g_get_monotonic_time ();
+        return TRUE;
 }
 
 static int
@@ -845,17 +860,15 @@ mg_typing_update (session *sess, const char *text)
 
         if (!text || !*text || text[0] == prefs.hex_input_command_char[0])
         {
-                if (sess->typing_status)
+                if (sess->typing_status && mg_typing_can_send (sess))
                         mg_send_typing (sess, "done");
                 sess->typing_status = 0;
                 return;
         }
 
-        if (sess->typing_status != 1)
-        {
+        if (mg_typing_can_send (sess))
                 mg_send_typing (sess, "active");
-                sess->typing_status = 1;
-        }
+        sess->typing_status = 1;
         sess->typing_timeout_tag = fe_timeout_add_seconds (6, mg_typing_pause_cb, sess);
 }
 
