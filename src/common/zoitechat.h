@@ -450,6 +450,7 @@ typedef struct session
 	int mode_timeout_tag;
 	int typing_timeout_tag;
 	int typing_status;
+	gint64 typing_last_sent;
 	int typing_animation_tag;
 	int typing_animation_frame;
 
