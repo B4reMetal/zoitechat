@@ -1346,6 +1346,70 @@ select {
         animation-iteration-count: 1 !important;
     }
 }
+
+/* Automatic dark appearance, matching the main ZoiteChat site palette. */
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+        --paper: #161514;
+        --paper-warm: #f4ead9;
+        --paper-cool: #1c2522;
+        --ink: #f2eadb;
+        --ink-soft: #ddd2c1;
+        --muted: #bdb19f;
+        --quiet: #928777;
+        --rule: #080706;
+        --rule-soft: rgba(242, 234, 219, 0.16);
+        --rule-mid: rgba(242, 234, 219, 0.3);
+        --panel: #211e1a;
+        --panel-alt: #2b261f;
+        --panel-dark: #0b0c0c;
+        --accent: #c34720;
+        --accent-dark: #ff966d;
+        --accent-soft: rgba(195, 71, 32, 0.17);
+        --green: #367662;
+        --blue: #386b8d;
+        --warning: #9b6508;
+        --success: #43856a;
+        --shadow: 8px 8px 0 rgba(0, 0, 0, 0.82);
+        --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.36);
+    }
+
+    html {
+        background: var(--paper);
+    }
+
+    body {
+        background:
+            linear-gradient(90deg, rgba(242, 234, 219, 0.025) 1px, transparent 1px) 0 0 / 68px 68px,
+            linear-gradient(180deg, rgba(242, 234, 219, 0.022) 1px, transparent 1px) 0 0 / 68px 68px,
+            radial-gradient(circle at 11% 18%, rgba(195, 71, 32, 0.15), transparent 24rem),
+            radial-gradient(circle at 86% 4%, rgba(54, 118, 98, 0.16), transparent 28rem),
+            linear-gradient(180deg, #181715 0%, #111311 58%, #191714 100%);
+    }
+
+    body::before {
+        background:
+            repeating-linear-gradient(90deg, transparent 0 17px, rgba(242, 234, 219, 0.025) 17px 18px),
+            repeating-linear-gradient(0deg, transparent 0 5px, rgba(255, 255, 255, 0.025) 5px 6px);
+        mix-blend-mode: screen;
+    }
+
+    .site-header {
+        background: rgba(22, 21, 20, 0.94);
+    }
+
+    .site-nav a,
+    .nav-menu summary {
+        background: rgba(39, 35, 30, 0.52);
+    }
+
+    .eyebrow::before,
+    .footer-links a::before {
+        color: #e0aa3c;
+    }
+}
+
 /* Sphinx/Read the Docs bridge: aggressively map documentation onto the main ZoiteChat site skin. */
 html {
     font-size: 16px !important;
@@ -2273,5 +2337,39 @@ footer:not(.site-footer) {
         max-width: none !important;
         font-size: clamp(1.18rem, 5.4vw, 1.48rem) !important;
         letter-spacing: -0.04em !important;
+    }
+}
+
+/* Keep basicstrap's stronger overrides readable with the main site's dark palette. */
+@media (prefers-color-scheme: dark) {
+    #navbar-top.site-header {
+        background: rgba(22, 21, 20, 0.94) !important;
+    }
+
+    #navbar-top .site-nav a,
+    #navbar-top .site-nav summary {
+        background: rgba(39, 35, 30, 0.52) !important;
+    }
+
+    .document::after,
+    .sidebar::after,
+    #navbar-related::after {
+        background: linear-gradient(135deg, transparent 50%, rgba(242, 234, 219, 0.09) 50%) !important;
+    }
+
+    input[type="text"],
+    input[type="search"],
+    .search-query,
+    .form-control,
+    textarea,
+    select {
+        background: var(--panel) !important;
+        box-shadow: inset 3px 3px 0 rgba(0, 0, 0, 0.32) !important;
+    }
+
+    .warning,
+    .caution,
+    .danger {
+        background: #3a2e19 !important;
     }
 }

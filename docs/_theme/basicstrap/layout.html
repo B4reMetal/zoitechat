@@ -209,6 +209,8 @@
     {%- endif %}
     <meta name="description" content="">
     <meta name="author" content="">
+    <meta name="theme-color" content="#eee5d3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#161514" media="(prefers-color-scheme: dark)">
 
     {{ css() }}
     {%- if not embedded %}
@@ -260,6 +262,7 @@
         <nav class="site-nav" aria-label="Primary">
           <a href="https://zoitechat.org/">Home</a>
           <a href="https://zoitechat.org/addons.php">Addons</a>
+          <a href="https://zoitechat.org/announcements.php">Announcements</a>
           <a href="https://zoitechat.org/download.php">Download</a>
           <a href="{{ pathto(master_doc) }}">Docs</a>
           <a href="https://github.com/ZoiteChat/zoitechat" target="_blank" rel="noopener">GitHub</a>
@@ -336,6 +339,7 @@
           <div class="footer-links">
             <a href="https://zoitechat.org/download.php">Download</a>
             <a href="https://zoitechat.org/addons.php">Addons</a>
+            <a href="https://zoitechat.org/announcements.php">Announcements</a>
             <a href="https://zoitechat.org/privacy.php">Privacy Policy</a>
             <a href="{{ pathto(master_doc) }}">Documentation</a>
             <a href="https://github.com/ZoiteChat/zoitechat" target="_blank" rel="noopener">Source code</a>
