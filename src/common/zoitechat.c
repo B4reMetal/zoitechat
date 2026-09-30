@@ -95,6 +95,7 @@ int zoitechat_is_quitting = FALSE;
 /* command-line args */
 int arg_dont_autoconnect = FALSE;
 int arg_skip_plugins = FALSE;
+gint arg_run_as_root = FALSE;
 char *arg_url = NULL;
 char **arg_urls = NULL;
 char *arg_command = NULL;
@@ -1175,6 +1176,25 @@ main (int argc, char *argv[])
 	HRESULT coinit_result;
 #endif
 
+#ifdef __linux__
+	for (i = 1; i < argc; i++)
+	{
+		if (strcmp (argv[i], "--") == 0)
+			break;
+		if (strcmp (argv[i], "--run-as-root") == 0)
+		{
+			arg_run_as_root = TRUE;
+			break;
+		}
+	}
+
+	if (geteuid () == 0 && !arg_run_as_root)
+	{
+		fe_root_warning ();
+		return EXIT_FAILURE;
+	}
+#endif
+
 	srand ((unsigned int) time (NULL)); /* CL: do this only once! */
 
 	/* We must check for the config dir parameter, otherwise load_config() will behave incorrectly.
@@ -1263,7 +1283,7 @@ main (int argc, char *argv[])
 #ifndef WIN32
 #ifndef __EMX__
 	/* OS/2 uses UID 0 all the time */
-	if (getuid () == 0)
+	if (getuid () == 0 && !arg_run_as_root)
 		fe_message (_("* Running IRC as root is stupid! You should\n"
 			      "  create a User Account and use that to login.\n"), FE_MSG_WARN|FE_MSG_WAIT);
 #endif

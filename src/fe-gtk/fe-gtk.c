@@ -90,6 +90,9 @@ static const GOptionEntry gopt_entries[] =
  {"no-auto",	'a', 0, G_OPTION_ARG_NONE,	&arg_dont_autoconnect, N_("Don't auto connect to servers"), NULL},
  {"cfgdir",	'd', 0, G_OPTION_ARG_STRING,	&arg_cfgdir, N_("Use a different config directory"), "PATH"},
  {"no-plugins",	'n', 0, G_OPTION_ARG_NONE,	&arg_skip_plugins, N_("Don't auto load any plugins"), NULL},
+#ifdef __linux__
+ {"run-as-root", 0, 0, G_OPTION_ARG_NONE, &arg_run_as_root, N_("Allow ZoiteChat to run as root (unsafe)"), NULL},
+#endif
  {"plugindir",	'p', 0, G_OPTION_ARG_NONE,	&arg_show_autoload, N_("Show plugin/script auto-load directory"), NULL},
  {"configdir",	'u', 0, G_OPTION_ARG_NONE,	&arg_show_config, N_("Show user config directory"), NULL},
  {"url",	 0,  G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &arg_url, N_("Open an irc://server:port/channel?key URL"), "URL"},
@@ -102,6 +105,33 @@ static const GOptionEntry gopt_entries[] =
  {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &arg_urls, N_("Open an irc://server:port/channel?key URL"), "URL"},
  {NULL}
 };
+
+#ifdef __linux__
+void
+fe_root_warning (void)
+{
+	const char *message =
+		"ZoiteChat refuses to run as root on Linux.\n\n"
+		"Run it as a normal user, or pass --run-as-root to override this protection.";
+	GtkWidget *dialog;
+
+	g_printerr ("%s\n", message);
+
+	/* A graphical session may not be accessible to root, particularly under
+	 * Wayland. Keep stderr as the fallback if GTK cannot open the display. */
+	if (!gtk_init_check (NULL, NULL))
+		return;
+
+	dialog = gtk_message_dialog_new (NULL,
+	                                 GTK_DIALOG_MODAL,
+	                                 GTK_MESSAGE_ERROR,
+	                                 GTK_BUTTONS_CLOSE,
+	                                 "%s", message);
+	gtk_window_set_title (GTK_WINDOW (dialog), "ZoiteChat");
+	gtk_dialog_run (GTK_DIALOG (dialog));
+	gtk_widget_destroy (dialog);
+}
+#endif
 
 #ifdef WIN32
 static void
