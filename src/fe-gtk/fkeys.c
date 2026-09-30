@@ -1221,7 +1221,7 @@ key_dialog_load (GtkListStore *store)
 void
 key_dialog_show ()
 {
-	GtkWidget *vbox, *box;
+	GtkWidget *vbox, *box, *pane, *scroll;
 	GtkWidget *view, *xtext, *delete_button;
 	GtkListStore *store;
 	XTextColor xtext_palette[XTEXT_COLS];
@@ -1237,10 +1237,20 @@ key_dialog_show ()
 	key_dialog = mg_create_generic_tab ("editkeys", buf, TRUE, FALSE, key_dialog_close,
 									NULL, 600, 360, &vbox, 0);
 
-	view = key_dialog_treeview_new (vbox);
+	pane = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
+	gtk_box_pack_start (GTK_BOX (vbox), pane, TRUE, TRUE, 0);
+	box = gtkutil_box_new (GTK_ORIENTATION_VERTICAL, FALSE, 0);
+	gtk_paned_pack1 (GTK_PANED (pane), box, TRUE, FALSE);
+	view = key_dialog_treeview_new (box);
+	scroll = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll),
+	                                GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+	gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (scroll), 80);
+	gtk_paned_pack2 (GTK_PANED (pane), scroll, TRUE, FALSE);
+	gtk_paned_set_position (GTK_PANED (pane), 220);
 	theme_get_xtext_colors (xtext_palette, XTEXT_COLS);
 	xtext = gtk_xtext_new (xtext_palette, 0);
-	gtk_box_pack_start (GTK_BOX (vbox), xtext, FALSE, TRUE, 2);
+	gtk_container_add (GTK_CONTAINER (scroll), xtext);
 	gtk_xtext_set_font (GTK_XTEXT (xtext), prefs.hex_text_font);
 
 	g_object_set_data (G_OBJECT (key_dialog), "view", view);

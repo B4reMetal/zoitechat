@@ -1848,10 +1848,33 @@ image_viewer_button_press (GtkWidget *widget, GdkEventButton *event,
 	return TRUE;
 }
 
+static gboolean
+image_viewer_draw (GtkWidget *widget, cairo_t *cr, gpointer data)
+{
+	GdkPixbuf *pixbuf = data;
+	int width = gdk_pixbuf_get_width (pixbuf);
+	int height = gdk_pixbuf_get_height (pixbuf);
+	int available_width = gtk_widget_get_allocated_width (widget);
+	int available_height = gtk_widget_get_allocated_height (widget);
+	double scale = MIN ((double) available_width / width,
+	                    (double) available_height / height);
+
+	/* Draw from the original so repeated resizing never degrades the image. */
+	cairo_save (cr);
+	cairo_translate (cr, (available_width - width * scale) / 2,
+	                 (available_height - height * scale) / 2);
+	cairo_scale (cr, scale, scale);
+	gdk_cairo_set_source_pixbuf (cr, pixbuf, 0, 0);
+	cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_BILINEAR);
+	cairo_paint (cr);
+	cairo_restore (cr);
+	return FALSE;
+}
+
 void
 inline_image_show_viewer (GtkXText *xtext, textentry *ent)
 {
-	GdkPixbuf *pixbuf, *scaled = NULL;
+	GdkPixbuf *pixbuf;
 	GtkWidget *window, *eventbox, *image, *toplevel;
 	const char *url;
 	int width, height, max_width = 1280, max_height = 960;
@@ -1885,18 +1908,15 @@ inline_image_show_viewer (GtkXText *xtext, textentry *ent)
 		double scale = MIN ((double) max_width / width,
 								  (double) max_height / height);
 
-		scaled = gdk_pixbuf_scale_simple (pixbuf,
-			MAX (1, (int) (width * scale)), MAX (1, (int) (height * scale)),
-			GDK_INTERP_BILINEAR);
-		if (scaled)
-			pixbuf = scaled;
+		width = MAX (1, (int) (width * scale));
+		height = MAX (1, (int) (height * scale));
 	}
 
 	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	url = gtk_xtext_entry_get_image_url (xtext, ent);
 	gtk_window_set_title (GTK_WINDOW (window), url ? url : _("Image"));
 	gtk_window_set_type_hint (GTK_WINDOW (window), GDK_WINDOW_TYPE_HINT_DIALOG);
-	gtk_window_set_resizable (GTK_WINDOW (window), FALSE);
+	gtk_window_set_default_size (GTK_WINDOW (window), width, height);
 
 	toplevel = gtk_widget_get_toplevel (GTK_WIDGET (xtext));
 	if (GTK_IS_WINDOW (toplevel))
@@ -1908,7 +1928,10 @@ inline_image_show_viewer (GtkXText *xtext, textentry *ent)
 	}
 
 	eventbox = gtk_event_box_new ();
-	image = gtk_image_new_from_pixbuf (pixbuf);
+	image = gtk_drawing_area_new ();
+	g_object_set_data_full (G_OBJECT (image), "zoitechat-viewer-image",
+	                        g_object_ref (pixbuf), g_object_unref);
+	g_signal_connect (G_OBJECT (image), "draw", G_CALLBACK (image_viewer_draw), pixbuf);
 	gtk_container_add (GTK_CONTAINER (eventbox), image);
 	gtk_container_add (GTK_CONTAINER (window), eventbox);
 
@@ -1918,7 +1941,4 @@ inline_image_show_viewer (GtkXText *xtext, textentry *ent)
 							G_CALLBACK (image_viewer_button_press), window);
 
 	gtk_widget_show_all (window);
-
-	if (scaled)
-		g_object_unref (scaled);
 }

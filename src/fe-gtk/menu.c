@@ -1595,16 +1595,16 @@ menu_join (GtkWidget * wid, gpointer none)
 									NULL);
 	theme_manager_attach_window (dialog);
 	content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
-	gtk_box_set_homogeneous (GTK_BOX (content_area), TRUE);
 	gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_MOUSE);
-	hbox = gtkutil_box_new (GTK_ORIENTATION_HORIZONTAL, TRUE, 0);
+	hbox = gtkutil_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE, 6);
 
 	entry = gtk_entry_new ();
 	gtk_editable_set_editable (GTK_EDITABLE (entry), FALSE);	/* avoid auto-selection */
 	gtk_entry_set_text (GTK_ENTRY (entry), "#");
 	g_signal_connect (G_OBJECT (entry), "activate",
 						 	G_CALLBACK (menu_join_entry_cb), dialog);
-	gtk_box_pack_end (GTK_BOX (hbox), entry, 0, 0, 0);
+	gtk_widget_set_valign (entry, GTK_ALIGN_CENTER);
+	gtk_box_pack_end (GTK_BOX (hbox), entry, TRUE, TRUE, 0);
 
 	label = gtk_label_new (_("Enter Channel to Join:"));
 	gtk_box_pack_end (GTK_BOX (hbox), label, 0, 0, 0);
@@ -1612,7 +1612,7 @@ menu_join (GtkWidget * wid, gpointer none)
 	g_signal_connect (G_OBJECT (dialog), "response",
 						   G_CALLBACK (menu_join_cb), entry);
 
-	gtk_container_add (GTK_CONTAINER (content_area), hbox);
+	gtk_box_pack_start (GTK_BOX (content_area), hbox, TRUE, TRUE, 0);
 
 	gtk_widget_show_all (dialog);
 

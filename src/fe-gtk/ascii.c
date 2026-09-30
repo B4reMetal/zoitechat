@@ -138,7 +138,7 @@ ascii_open (void)
 		{
 			table_pos++;
 			hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-			gtk_container_add (GTK_CONTAINER (vbox), hbox);
+			gtk_box_pack_start (GTK_BOX (vbox), hbox, TRUE, TRUE, 0);
 			gtk_widget_show (hbox);
 			i++;
 			continue;
@@ -155,14 +155,14 @@ ascii_open (void)
 								G_CALLBACK (ascii_click), NULL);
 		g_signal_connect (G_OBJECT (but), "enter-notify-event",
 								G_CALLBACK (ascii_enter), label);
-		gtk_box_pack_start (GTK_BOX (hbox), but, 0, 0, 0);
+		gtk_box_pack_start (GTK_BOX (hbox), but, TRUE, TRUE, 0);
 		gtk_widget_show (but);
 
 		table_pos += len;
 	}
 
 	frame = gtk_frame_new ("");
-	gtk_container_add (GTK_CONTAINER (hbox), frame);
+	gtk_box_pack_start (GTK_BOX (hbox), frame, TRUE, TRUE, 0);
 	gtk_container_add (GTK_CONTAINER (frame), label);
 	gtk_widget_show (label);
 	gtk_widget_show (frame);
