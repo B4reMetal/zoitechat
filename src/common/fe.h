@@ -70,6 +70,9 @@ void fe_add_rawlog (struct server *serv, char *text, int len, int outbound);
 #define FE_MSG_ERROR 8
 #define FE_MSG_MARKUP 16
 void fe_message (char *msg, int flags);
+#ifdef __linux__
+void fe_root_warning (void);
+#endif
 #define FIA_READ 1
 #define FIA_WRITE 2
 #define FIA_EX 4

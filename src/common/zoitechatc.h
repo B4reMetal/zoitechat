@@ -25,6 +25,7 @@ extern struct zoitechatprefs prefs;
 extern int zoitechat_is_quitting;
 extern gint arg_skip_plugins;	/* command-line args */
 extern gint arg_dont_autoconnect;
+extern gint arg_run_as_root;
 extern char *arg_url;
 extern char **arg_urls;
 extern char *arg_command;
