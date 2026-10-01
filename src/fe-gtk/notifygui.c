@@ -391,34 +391,39 @@ fe_notify_ask (char *nick, char *networks)
 	gtk_container_set_border_width (GTK_CONTAINER (table), 12);
 	gtk_grid_set_row_spacing (GTK_GRID (table), 3);
 	gtk_grid_set_column_spacing (GTK_GRID (table), 8);
-	gtk_container_add (GTK_CONTAINER (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), table);
+	gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
+	                    table, TRUE, TRUE, 0);
 
 	label = gtk_label_new (msg);
-	gtkutil_grid_attach_defaults (table, label, 0, 1, 0, 1);
+	gtk_label_set_xalign (GTK_LABEL (label), 0.0f);
+	gtkutil_grid_attach (table, label, 0, 1, 0, 1, GTKUTIL_ATTACH_FILL, 0, 0, 0);
 
 	entry = gtk_entry_new ();
 	gtk_entry_set_text (GTK_ENTRY (entry), nick);
 	g_signal_connect (G_OBJECT (entry), "activate",
 						 	G_CALLBACK (notifygui_add_enter), dialog);
-	gtkutil_grid_attach_defaults (table, entry, 1, 2, 0, 1);
+	gtkutil_grid_attach (table, entry, 1, 2, 0, 1,
+	                     GTKUTIL_ATTACH_EXPAND | GTKUTIL_ATTACH_FILL, 0, 0, 0);
 
 	g_signal_connect (G_OBJECT (dialog), "response",
 						   G_CALLBACK (notifygui_add_cb), entry);
 
 	label = gtk_label_new (_("Notify on these networks:"));
-	gtkutil_grid_attach_defaults (table, label, 0, 1, 2, 3);
+	gtk_label_set_xalign (GTK_LABEL (label), 0.0f);
+	gtkutil_grid_attach (table, label, 0, 1, 2, 3, GTKUTIL_ATTACH_FILL, 0, 0, 0);
 
 	wid = gtk_entry_new ();
 	g_object_set_data (G_OBJECT (entry), "net", wid);
 	g_signal_connect (G_OBJECT (wid), "activate",
 						 	G_CALLBACK (notifygui_add_enter), dialog);
 	gtk_entry_set_text (GTK_ENTRY (wid), networks ? networks : "ALL");
-	gtkutil_grid_attach_defaults (table, wid, 1, 2, 2, 3);
+	gtkutil_grid_attach (table, wid, 1, 2, 2, 3,
+	                     GTKUTIL_ATTACH_EXPAND | GTKUTIL_ATTACH_FILL, 0, 0, 0);
 
 	label = gtk_label_new (NULL);
 	g_snprintf (buf, sizeof (buf), "<i><span size=\"smaller\">%s</span></i>", _("Comma separated list of networks is accepted."));
 	gtk_label_set_markup (GTK_LABEL (label), buf);
-	gtkutil_grid_attach_defaults (table, label, 1, 2, 3, 4);
+	gtkutil_grid_attach (table, label, 1, 2, 3, 4, GTKUTIL_ATTACH_FILL, 0, 0, 0);
 
 	gtk_widget_show_all (dialog);
 }

@@ -2330,7 +2330,6 @@ mg_open_quit_dialog (gboolean minimize_button)
         gtk_container_set_border_width (GTK_CONTAINER (dialog), 6);
         gtk_window_set_title (GTK_WINDOW (dialog), _("Quit ZoiteChat?"));
         gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (parent_window));
-        gtk_window_set_resizable (GTK_WINDOW (dialog), FALSE);
 
         dialog_vbox1 = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
         gtk_widget_show (dialog_vbox1);

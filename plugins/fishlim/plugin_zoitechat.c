@@ -710,6 +710,7 @@ static int handle_fishlim(char *word[], char *word_eol[], void *userdata) {
     gtk_box_pack_start(GTK_BOX(content), grid, TRUE, TRUE, 0);
 
     fishlim_target_entry = gtk_entry_new();
+    gtk_widget_set_hexpand(fishlim_target_entry, TRUE);
     if (target)
         gtk_entry_set_text(GTK_ENTRY(fishlim_target_entry), target);
     gtk_grid_attach(GTK_GRID(grid), gtk_label_new("Target nick or channel"), 0, 0, 1, 1);
@@ -760,6 +761,7 @@ static int handle_fishlim(char *word[], char *word_eol[], void *userdata) {
     g_signal_connect(view, "row-activated", G_CALLBACK(fishlim_gui_row_activated), NULL);
 
     scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_widget_set_hexpand(scroll, TRUE);
     gtk_widget_set_vexpand(scroll, TRUE);
     gtk_container_add(GTK_CONTAINER(scroll), view);
     gtk_grid_attach(GTK_GRID(grid), scroll, 0, 6, 3, 1);

@@ -1911,6 +1911,7 @@ theme_preferences_create_page (GtkWindow *parent,
                                          G_TYPE_STRING,
                                          G_TYPE_INT);
         ui->gtk3_combo = gtk_combo_box_new_with_model (GTK_TREE_MODEL (gtk3_store));
+        gtk_widget_set_hexpand (ui->gtk3_combo, TRUE);
         g_object_unref (gtk3_store);
         renderer = gtk_cell_renderer_text_new ();
         gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (ui->gtk3_combo), renderer, TRUE);

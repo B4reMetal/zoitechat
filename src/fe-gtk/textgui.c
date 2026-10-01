@@ -400,7 +400,6 @@ pevent_treeview_new (GtkWidget *box)
 	scroll = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scroll), GTK_SHADOW_IN);
-	gtk_widget_set_size_request (GTK_WIDGET (scroll), -1, 250);
 
 	store = gtk_list_store_new (N_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
 	g_return_val_if_fail (store != NULL, NULL);
@@ -437,7 +436,7 @@ pevent_treeview_new (GtkWidget *box)
 	gtk_tree_view_column_set_min_width (col, 100);
 
 	gtk_container_add (GTK_CONTAINER (scroll), view);
-	gtk_container_add (GTK_CONTAINER (box), scroll);
+	gtk_paned_pack1 (GTK_PANED (box), scroll, TRUE, FALSE);
 
 	return view;
 }
@@ -481,7 +480,7 @@ pevent_hlist_treeview_new (GtkWidget *box)
 	gtk_tree_view_column_set_sizing (col, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
 
 	gtk_container_add (GTK_CONTAINER (scroll), view);
-	gtk_container_add (GTK_CONTAINER (box), scroll);
+	gtk_paned_pack2 (GTK_PANED (box), scroll, TRUE, FALSE);
 
 	return view;
 }
@@ -489,7 +488,7 @@ pevent_hlist_treeview_new (GtkWidget *box)
 void
 pevent_dialog_show ()
 {
-	GtkWidget *vbox, *hbox, *wid, *pane;
+	GtkWidget *vbox, *hbox, *wid, *pane, *preview_pane;
 	XTextColor xtext_palette[XTEXT_COLS];
 
 	if (pevent_dialog)
@@ -503,8 +502,12 @@ pevent_dialog_show ()
 											 TRUE, FALSE, pevent_dialog_close, NULL,
 											 600, 455, &vbox, 0);
 
+	preview_pane = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
+	gtk_box_pack_start (GTK_BOX (vbox), preview_pane, TRUE, TRUE, 0);
 	pane = gtk_paned_new (GTK_ORIENTATION_VERTICAL);
-	gtk_box_pack_start (GTK_BOX (vbox), pane, TRUE, TRUE, 0);
+	gtk_paned_pack1 (GTK_PANED (preview_pane), pane, TRUE, FALSE);
+	gtk_paned_set_position (GTK_PANED (pane), 220);
+	gtk_paned_set_position (GTK_PANED (preview_pane), 330);
 	
 	pevent_dialog_list = pevent_treeview_new (pane);
 	pevent_dialog_fill (pevent_dialog_list);
@@ -513,12 +516,12 @@ pevent_dialog_show ()
 
 	wid = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (wid), GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
-	gtk_box_pack_start (GTK_BOX (vbox), wid, FALSE, TRUE, 0);
+	gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (wid), 75);
+	gtk_paned_pack2 (GTK_PANED (preview_pane), wid, TRUE, FALSE);
 
 	theme_get_xtext_colors_for_widget (wid, xtext_palette, XTEXT_COLS);
 	pevent_dialog_twid = gtk_xtext_new (xtext_palette, 0);
 	gtk_widget_set_sensitive (pevent_dialog_twid, FALSE);
-	gtk_widget_set_size_request (pevent_dialog_twid, -1, 75);
 	gtk_container_add (GTK_CONTAINER (wid), pevent_dialog_twid);
 	gtk_xtext_set_font (GTK_XTEXT (pevent_dialog_twid), prefs.hex_text_font);
 	g_object_set_data (G_OBJECT (pevent_dialog), "xtext", pevent_dialog_twid);

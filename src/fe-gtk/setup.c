@@ -1256,7 +1256,7 @@ setup_create_id_menu (GtkWidget *table, char *label, int row, char *dest)
 static void
 setup_create_menu (GtkWidget *table, int row, const setting *set)
 {
-        GtkWidget *wid, *cbox, *box;
+        GtkWidget *wid, *cbox;
         const char **text = (const char **)set->list;
         int i;
 
@@ -1277,9 +1277,7 @@ setup_create_menu (GtkWidget *table, int row, const setting *set)
         g_signal_connect (G_OBJECT (cbox), "changed",
                                                         G_CALLBACK (setup_menu_cb), (gpointer)set);
 
-        box = gtkutil_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE, 0);
-        gtk_box_pack_start (GTK_BOX (box), cbox, 0, 0, 0);
-        setup_table_attach (table, box, 3, 4, row, row + 1, TRUE, FALSE,
+        setup_table_attach (table, cbox, 3, 6, row, row + 1, TRUE, FALSE,
                             SETUP_ALIGN_FILL, SETUP_ALIGN_FILL, 0, 0);
 }
 
@@ -1963,7 +1961,8 @@ setup_add_page (const char *title, GtkWidget *book, GtkWidget *tab)
 
         sw = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new (NULL, NULL));
         gtk_scrolled_window_set_shadow_type (sw, GTK_SHADOW_IN);
-        gtk_scrolled_window_set_policy (sw, GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+        gtk_scrolled_window_set_policy (sw, GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+        gtk_scrolled_window_set_propagate_natural_width (sw, TRUE);
         gtk_container_add (GTK_CONTAINER (sw), vvbox);
 
         viewport = gtk_bin_get_child (GTK_BIN(sw));
@@ -2007,7 +2006,9 @@ setup_ensure_page_created (int page)
         }
 
         page_widget = setup_page_factories[page] (setup_page_settings[page]);
-        gtk_container_add (GTK_CONTAINER (container), page_widget);
+        /* Lazy pages must pass the notebook's spare space to their content,
+           particularly the independently scrolling Sounds list. */
+        gtk_box_pack_start (GTK_BOX (container), page_widget, TRUE, TRUE, 0);
         gtk_widget_show_all (container);
 }
 
@@ -2185,9 +2186,14 @@ setup_create_tree (GtkWidget *box, GtkWidget *book)
                                                             -1, _("Categories"), renderer, "text", 0, NULL);
         gtk_tree_view_expand_all (GTK_TREE_VIEW (tree));
 
-        frame = gtk_frame_new (NULL);
+        frame = gtk_scrolled_window_new (NULL, NULL);
+        gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (frame),
+                                       GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+        gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (frame), GTK_SHADOW_IN);
+        gtk_scrolled_window_set_propagate_natural_width (GTK_SCROLLED_WINDOW (frame), TRUE);
+        gtk_widget_set_vexpand (frame, TRUE);
         gtk_container_add (GTK_CONTAINER (frame), tree);
-        gtk_box_pack_start (GTK_BOX (box), frame, 0, 0, 0);
+        gtk_box_pack_start (GTK_BOX (box), frame, FALSE, TRUE, 0);
         gtk_box_reorder_child (GTK_BOX (box), frame, 0);
 
         if (sel_iter)

@@ -641,9 +641,8 @@ gtkutil_get_str (char *msg, char *def, void *callback, void *userdata, gboolean 
 	if (parent_window && GTK_IS_WINDOW (parent_window))
 		gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (parent_window));
 	gtkutil_place_dialog (dialog);
-	gtk_box_set_homogeneous (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), TRUE);
 
-	hbox = gtkutil_box_new (GTK_ORIENTATION_HORIZONTAL, TRUE, 0);
+	hbox = gtkutil_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE, 6);
 
 	g_object_set_data (G_OBJECT (dialog), "cb", callback);
 	g_object_set_data (G_OBJECT (dialog), "ud", userdata);
@@ -653,7 +652,8 @@ gtkutil_get_str (char *msg, char *def, void *callback, void *userdata, gboolean 
 						 	G_CALLBACK (gtkutil_str_enter), dialog);
 	gtk_entry_set_text (GTK_ENTRY (entry), def ? def : "");
 	gtk_entry_set_visibility (GTK_ENTRY (entry), visible);
-	gtk_box_pack_end (GTK_BOX (hbox), entry, 0, 0, 0);
+	gtk_widget_set_valign (entry, GTK_ALIGN_CENTER);
+	gtk_box_pack_end (GTK_BOX (hbox), entry, TRUE, TRUE, 0);
 
 	label = gtk_label_new (msg);
 	gtk_box_pack_end (GTK_BOX (hbox), label, 0, 0, 0);
@@ -661,7 +661,8 @@ gtkutil_get_str (char *msg, char *def, void *callback, void *userdata, gboolean 
 	g_signal_connect (G_OBJECT (dialog), "response",
 						   G_CALLBACK (gtkutil_get_str_response), entry);
 
-	gtk_container_add (GTK_CONTAINER (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), hbox);
+	gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
+	                    hbox, TRUE, TRUE, 0);
 
 	gtk_widget_show_all (dialog);
 }
@@ -742,9 +743,8 @@ fe_get_int (char *msg, int def, void *callback, void *userdata)
 	if (parent_window && GTK_IS_WINDOW (parent_window))
 		gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (parent_window));
 	gtkutil_place_dialog (dialog);
-	gtk_box_set_homogeneous (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), TRUE);
 
-	hbox = gtkutil_box_new (GTK_ORIENTATION_HORIZONTAL, TRUE, 0);
+	hbox = gtkutil_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE, 6);
 
 	g_object_set_data (G_OBJECT (dialog), "cb", callback);
 	g_object_set_data (G_OBJECT (dialog), "ud", userdata);
@@ -755,7 +755,8 @@ fe_get_int (char *msg, int def, void *callback, void *userdata)
 	gtk_adjustment_set_upper (adj, 1024);
 	gtk_adjustment_set_step_increment (adj, 1);
 	gtk_spin_button_set_value ((GtkSpinButton*)spin, def);
-	gtk_box_pack_end (GTK_BOX (hbox), spin, 0, 0, 0);
+	gtk_widget_set_valign (spin, GTK_ALIGN_CENTER);
+	gtk_box_pack_end (GTK_BOX (hbox), spin, TRUE, TRUE, 0);
 
 	label = gtk_label_new (msg);
 	gtk_box_pack_end (GTK_BOX (hbox), label, 0, 0, 0);
@@ -763,7 +764,8 @@ fe_get_int (char *msg, int def, void *callback, void *userdata)
 	g_signal_connect (G_OBJECT (dialog), "response",
 						   G_CALLBACK (gtkutil_get_number_response), spin);
 
-	gtk_container_add (GTK_CONTAINER (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), hbox);
+	gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
+	                    hbox, TRUE, TRUE, 0);
 
 	gtk_widget_show_all (dialog);
 }
@@ -783,17 +785,18 @@ fe_get_bool (char *title, char *prompt, void *callback, void *userdata)
 	if (parent_window && GTK_IS_WINDOW (parent_window))
 		gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (parent_window));
 	gtkutil_place_dialog (dialog);
-	gtk_box_set_homogeneous (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), TRUE);
 
 	g_object_set_data (G_OBJECT (dialog), "cb", callback);
 	g_object_set_data (G_OBJECT (dialog), "ud", userdata);
 
 	prompt_label = gtk_label_new (prompt);
+	gtk_label_set_line_wrap (GTK_LABEL (prompt_label), TRUE);
 
 	g_signal_connect (G_OBJECT (dialog), "response",
 		G_CALLBACK (gtkutil_get_bool_response), NULL);
 
-	gtk_container_add (GTK_CONTAINER (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), prompt_label);
+	gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
+	                    prompt_label, TRUE, TRUE, 0);
 
 	gtk_widget_show_all (dialog);
 }
@@ -885,7 +888,10 @@ gtkutil_window_new (char *title, char *role, int width, int height, int flags)
 	gtk_window_set_wmclass (GTK_WINDOW (win), "ZoiteChat", "zoitechat");
 #endif
 	gtk_window_set_title (GTK_WINDOW (win), title);
-	gtk_window_set_default_size (GTK_WINDOW (win), width, height);
+	/* Zero means content-sized to callers; GTK requires -1 for that. */
+	gtk_window_set_default_size (GTK_WINDOW (win),
+	                             width > 0 ? width : -1,
+	                             height > 0 ? height : -1);
 	gtk_window_set_role (GTK_WINDOW (win), role);
 	if (flags & 1)
 		gtk_window_set_position (GTK_WINDOW (win), GTK_WIN_POS_MOUSE);

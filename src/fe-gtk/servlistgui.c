@@ -2423,6 +2423,8 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 	GtkWidget *comboboxentry_charset;
 	GtkWidget *combobox_logintypes;
 	GtkWidget *hbox1;
+	GtkWidget *content_scroll;
+	GtkWidget *content_box;
 	GtkWidget *scrolledwindow2;
 	GtkWidget *scrolledwindow4;
 	GtkWidget *scrolledwindow5;
@@ -2449,7 +2451,9 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 	gtk_container_set_border_width (GTK_CONTAINER (editwindow), 4);
 	g_snprintf (buf, sizeof (buf), _("Edit %s - %s"), net->name, _(DISPLAY_NAME));
 	gtk_window_set_title (GTK_WINDOW (editwindow), buf);
-	gtk_window_set_default_size (GTK_WINDOW (editwindow), netedit_win_width, netedit_win_height);
+	gtk_window_set_default_size (GTK_WINDOW (editwindow),
+	                             netedit_win_width > 0 ? netedit_win_width : -1,
+	                             netedit_win_height > 0 ? netedit_win_height : -1);
 	gtk_window_set_transient_for (GTK_WINDOW (editwindow), GTK_WINDOW (parent));
 	gtk_window_set_modal (GTK_WINDOW (editwindow), TRUE);
 	gtk_window_set_type_hint (GTK_WINDOW (editwindow), GDK_WINDOW_TYPE_HINT_DIALOG);
@@ -2458,10 +2462,20 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 	vbox5 = gtkutil_box_new (GTK_ORIENTATION_VERTICAL, FALSE, 0);
 	gtk_container_add (GTK_CONTAINER (editwindow), vbox5);
 
+	/* Keep Close accessible on small screens, while the lists still receive
+	   all spare space when the complete form fits in the window. */
+	content_scroll = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (content_scroll),
+	                                GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+	gtk_scrolled_window_set_propagate_natural_width (GTK_SCROLLED_WINDOW (content_scroll), TRUE);
+	gtk_scrolled_window_set_propagate_natural_height (GTK_SCROLLED_WINDOW (content_scroll), TRUE);
+	gtk_box_pack_start (GTK_BOX (vbox5), content_scroll, TRUE, TRUE, 0);
+	content_box = gtkutil_box_new (GTK_ORIENTATION_VERTICAL, FALSE, 0);
+	gtk_container_add (GTK_CONTAINER (content_scroll), content_box);
 
 	/* Tabs and buttons */
 	hbox1 = gtkutil_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE, 0);
-	gtk_box_pack_start (GTK_BOX (vbox5), hbox1, TRUE, TRUE, 4);
+	gtk_box_pack_start (GTK_BOX (content_box), hbox1, TRUE, TRUE, 4);
 
 	scrolledwindow2 = gtk_scrolled_window_new (NULL, NULL);
 	scrolledwindow4 = gtk_scrolled_window_new (NULL, NULL);
@@ -2599,7 +2613,7 @@ servlist_open_edit (GtkWidget *parent, ircnet *net)
 
 	/* Checkboxes and entries */
 	table3 = gtkutil_grid_new (19, 2, FALSE);
-	gtk_box_pack_start (GTK_BOX (vbox5), table3, FALSE, FALSE, 0);
+	gtk_box_pack_start (GTK_BOX (content_box), table3, FALSE, FALSE, 0);
 	gtk_grid_set_row_spacing (GTK_GRID (table3), 2);
 	gtk_grid_set_column_spacing (GTK_GRID (table3), 8);
 
@@ -2828,7 +2842,9 @@ servlist_open_networks (void)
 	gtk_container_set_border_width (GTK_CONTAINER (servlist), 4);
 	g_snprintf(buf, sizeof(buf), _("Network List - %s"), _(DISPLAY_NAME));
 	gtk_window_set_title (GTK_WINDOW (servlist), buf);
-	gtk_window_set_default_size (GTK_WINDOW (servlist), netlist_win_width, netlist_win_height);
+	gtk_window_set_default_size (GTK_WINDOW (servlist),
+	                             netlist_win_width > 0 ? netlist_win_width : -1,
+	                             netlist_win_height > 0 ? netlist_win_height : -1);
 	gtk_window_set_role (GTK_WINDOW (servlist), "servlist");
 	gtk_window_set_type_hint (GTK_WINDOW (servlist), GDK_WINDOW_TYPE_HINT_DIALOG);
 	if (current_sess)
