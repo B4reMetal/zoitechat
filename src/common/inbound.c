@@ -1880,38 +1880,51 @@ inbound_toggle_caps (server *serv, const char *extensions_str, gboolean enable)
 	char **extensions;
 	gsize i;
 
+	if (!extensions_str)
+		return;
+
 	extensions = g_strsplit (extensions_str, " ", 0);
 
 	for (i = 0; extensions[i]; i++)
 	{
 		const char *extension = extensions[i];
+		gboolean cap_enable = enable;
+
+		/* ACK prefixes disabled capabilities with '-', unlike CAP DEL. */
+		if (*extension == '-')
+		{
+			cap_enable = FALSE;
+			extension++;
+		}
 
 		if (!strcmp (extension, "solanum.chat/identify-msg"))
-			serv->have_idmsg = enable;
+			serv->have_idmsg = cap_enable;
 		else if (!strcmp (extension, "multi-prefix"))
-			serv->have_namesx = enable;
+			serv->have_namesx = cap_enable;
 		else if (!strcmp (extension, "account-notify"))
-			serv->have_accnotify = enable;
+			serv->have_accnotify = cap_enable;
 		else if (!strcmp (extension, "extended-join"))
-			serv->have_extjoin = enable;
+			serv->have_extjoin = cap_enable;
 		else if (!strcmp (extension, "userhost-in-names"))
-			serv->have_uhnames = enable;
+			serv->have_uhnames = cap_enable;
 		else if (!strcmp (extension, "server-time")
 				|| !strcmp (extension, "znc.in/server-time")
 				|| !strcmp (extension, "znc.in/server-time-iso"))
-			serv->have_server_time = enable;
+			serv->have_server_time = cap_enable;
 		else if (!strcmp (extension, "away-notify"))
-			serv->have_awaynotify = enable;
+			serv->have_awaynotify = cap_enable;
 		else if (!strcmp (extension, "account-tag"))
-			serv->have_account_tag = enable;
+			serv->have_account_tag = cap_enable;
 		else if (!strcmp (extension, "message-tags"))
-			serv->have_message_tags = enable;
+			serv->have_message_tags = cap_enable;
 		else if (!strcmp (extension, "echo-message"))
-			serv->have_echo_message = enable;
+			serv->have_echo_message = cap_enable;
 		else if (!strcmp (extension, "sasl"))
 		{
-			serv->have_sasl = enable;
-			if (enable)
+			gboolean start_auth = cap_enable && !serv->have_sasl;
+
+			serv->have_sasl = cap_enable;
+			if (start_auth)
 			{
 #ifdef USE_OPENSSL
 				if (serv->loginmethod == LOGIN_SASLEXTERNAL)
@@ -1962,10 +1975,15 @@ inbound_cap_ack (server *serv, char *nick, char *extensions,
 	inbound_toggle_caps (serv, extensions, TRUE);
 }
 
+static void inbound_request_new_caps (server *serv, const char *extensions_str,
+									 const message_tags_data *tags_data);
+
 void
 inbound_cap_new (server *serv, char *nick, char *extensions,
 					 const message_tags_data *tags_data)
 {
+	gboolean sts_upgrade_triggered = FALSE;
+
 	if (extensions)
 	{
 		char **tokens = g_strsplit (extensions, " ", 0);
@@ -1977,7 +1995,7 @@ inbound_cap_new (server *serv, char *nick, char *extensions,
 
 			if (!g_strcmp0 (parts[0], "sts") && parts[1] && parts[1][0])
 			{
-				sts_handle_capability (serv, parts[1]);
+				sts_upgrade_triggered |= sts_handle_capability (serv, parts[1]);
 			}
 
 			g_strfreev (parts);
@@ -1986,38 +2004,22 @@ inbound_cap_new (server *serv, char *nick, char *extensions,
 		g_strfreev (tokens);
 	}
 
-	EMIT_SIGNAL_TIMESTAMP (XP_TE_CAPACK, serv->server_session, nick, extensions,
+	EMIT_SIGNAL_TIMESTAMP (XP_TE_CAPLIST, serv->server_session, nick, extensions,
 								  NULL, NULL, 0, tags_data->timestamp);
 
-	inbound_toggle_caps (serv, extensions, TRUE);
+	/* NEW advertises availability; only ACK confirms an enabled capability. */
+	if (!sts_upgrade_triggered)
+		inbound_request_new_caps (serv, extensions, tags_data);
 }
 
 void
 inbound_cap_del (server *serv, char *nick, char *extensions,
 					 const message_tags_data *tags_data)
 {
-	if (extensions)
-	{
-		char **tokens = g_strsplit (extensions, " ", 0);
-		int i;
-
-		for (i = 0; tokens[i]; i++)
-		{
-			if (!g_strcmp0 (tokens[i], "sts") ||
-				g_str_has_prefix (tokens[i], "sts="))
-			{
-				/* STS cannot be disabled via CAP DEL. */
-				g_strfreev (tokens);
-				return;
-			}
-		}
-
-		g_strfreev (tokens);
-	}
-
 	EMIT_SIGNAL_TIMESTAMP (XP_TE_CAPDEL, serv->server_session, nick, extensions,
 								  NULL, NULL, 0, tags_data->timestamp);
 
+	/* STS has no toggle, but must not prevent other capabilities being removed. */
 	inbound_toggle_caps (serv, extensions, FALSE);
 }
 
@@ -2052,6 +2054,44 @@ static const char * const supported_caps[] = {
 	/* Solanum */
 	"solanum.chat/identify-msg",
 };
+
+static void
+inbound_request_new_caps (server *serv, const char *extensions_str,
+							 const message_tags_data *tags_data)
+{
+	char **extensions;
+	gsize i, x;
+
+	if (!extensions_str)
+		return;
+
+	extensions = g_strsplit (extensions_str, " ", 0);
+	for (i = 0; extensions[i]; i++)
+	{
+		char *value = strchr (extensions[i], '=');
+
+		if (value)
+			*value = '\0';
+	}
+
+	/* Request each supported capability once, keeping every IRC line bounded.
+	 * SASL is negotiated during login and is not in supported_caps. */
+	for (x = 0; x < G_N_ELEMENTS (supported_caps); x++)
+	{
+		for (i = 0; extensions[i]; i++)
+		{
+			if (!strcmp (extensions[i], supported_caps[x]))
+			{
+				EMIT_SIGNAL_TIMESTAMP (XP_TE_CAPREQ, serv->server_session,
+										  extensions[i], NULL, NULL, NULL, 0,
+										  tags_data->timestamp);
+				tcp_sendf (serv, "CAP REQ :%s\r\n", extensions[i]);
+				break;
+			}
+		}
+	}
+	g_strfreev (extensions);
+}
 
 static int
 get_supported_mech (server *serv, const char *list)
