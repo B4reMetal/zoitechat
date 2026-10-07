@@ -839,16 +839,35 @@ backend_draw_text_emph (GtkXText *xtext, gboolean dofill, int x, int y,
 	cairo_destroy (cr);
 }
 
+static XTextColor
+xtext_color_for_index (GtkXText *xtext, int index)
+{
+	if (index == XTEXT_HEX_FG)
+		return xtext->hex_fg;
+	if (index == XTEXT_HEX_BG)
+		return xtext->hex_bg;
+	return xtext->palette[index];
+}
+
 static void
 xtext_set_fg (GtkXText *xtext, int index)
 {
-	xtext->fgc = xtext->palette[index];
+	xtext->fgc = xtext_color_for_index (xtext, index);
 }
 
 static void
 xtext_set_bg (GtkXText *xtext, int index)
 {
-	xtext->bgc = xtext->palette[index];
+	xtext->bgc = xtext_color_for_index (xtext, index);
+}
+
+static void
+xtext_rgb_to_color (guint32 rgb, XTextColor *color)
+{
+	color->red = ((rgb >> 16) & 0xFF) / 255.0;
+	color->green = ((rgb >> 8) & 0xFF) / 255.0;
+	color->blue = (rgb & 0xFF) / 255.0;
+	color->alpha = 1.0;
 }
 
 static void
@@ -3466,6 +3485,14 @@ gtk_xtext_strip_color (unsigned char *text, int len, unsigned char *outbuf,
 				xtext_do_chunk (&c);
 				rcol = 2;
 				break;
+			case ATTR_HEXCOLOR:
+				xtext_do_chunk (&c);
+				{
+					int skip = hexcolor_parse ((char *)text + 1, len - 1, NULL, NULL, NULL);
+					text += skip;
+					len -= skip;
+				}
+				break;
 			case ATTR_BEEP:
 			case ATTR_RESET:
 			case ATTR_REVERSE:
@@ -4012,6 +4039,35 @@ gtk_xtext_render_str (GtkXText * xtext, int y, textentry * ent,
 				pstr += j + 1;
 				j = 0;
 				break;
+			case ATTR_HEXCOLOR:
+				RENDER_FLUSH;
+				{
+					guint32 fg = 0, bg = 0;
+					int has_bg;
+					int skip = hexcolor_parse ((char *)str + i + 1, len - i - 1, &fg, &bg, &has_bg);
+
+					if (skip == 0)
+						gtk_xtext_reset (xtext, mark, FALSE);
+					else
+					{
+						xtext_rgb_to_color (fg, &xtext->hex_fg);
+						xtext->col_fore = XTEXT_HEX_FG;
+						if (!mark)
+							xtext_set_fg (xtext, XTEXT_HEX_FG);
+						if (has_bg)
+						{
+							xtext_rgb_to_color (bg, &xtext->hex_bg);
+							xtext->col_back = XTEXT_HEX_BG;
+							xtext->backcolor = TRUE;
+							if (!mark)
+								xtext_set_bg (xtext, XTEXT_HEX_BG);
+						}
+					}
+					pstr += j + 1 + skip;
+					j = 0;
+					i += skip;
+				}
+				break;
 			default:
 				tmp = charlen (str + i);
 				/* invalid utf8 safe guard */
@@ -4228,6 +4284,13 @@ find_next_wrap (GtkXText * xtext, textentry * ent, unsigned char *str,
 					emphasis ^= EMPH_BOLD;
 				limit_offset++;
 				str++;
+				break;
+			case ATTR_HEXCOLOR:
+				{
+					int skip = hexcolor_parse ((char *)str + 1, (ent->str + ent->str_len) - str - 1, NULL, NULL, NULL);
+					limit_offset += 1 + skip;
+					str += 1 + skip;
+				}
 				break;
 			case ATTR_HIDDEN:
 				if (xtext->ignore_hidden)
