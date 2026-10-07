@@ -38,6 +38,7 @@ GType gtk_xtext_get_type (void);
 
 #define ATTR_BOLD				'\002'
 #define ATTR_COLOR			'\003'
+#define ATTR_HEXCOLOR		'\004'
 #define ATTR_BLINK			'\006'
 #define ATTR_BEEP				'\007'
 #define ATTR_HIDDEN			'\010'
@@ -57,6 +58,8 @@ GType gtk_xtext_get_type (void);
 #define XTEXT_BG 102
 #define XTEXT_MARKER 103	/* for marker line */
 #define XTEXT_MAX_COLOR 98
+#define XTEXT_HEX_FG 200	/* not palette slots: colors from \004RRGGBB */
+#define XTEXT_HEX_BG 201
 typedef struct textentry textentry;
 
 /*
@@ -181,6 +184,8 @@ struct _GtkXText
 
 	int col_fore;
 	int col_back;
+	XTextColor hex_fg;
+	XTextColor hex_bg;
 
 	int depth;						  /* gdk window depth */
 

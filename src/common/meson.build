@@ -197,3 +197,17 @@ test('Emoji Data Tests', emoji_data_tests,
   protocol: 'tap',
   timeout: 120,
 )
+
+hexcolor_tests = executable('hexcolor_tests',
+  [
+    'tests/test-hexcolor.c',
+    'util.c',
+  ],
+  include_directories: [config_h_include, include_directories('.')],
+  dependencies: [libgio_dep] + (libssl_dep.found() ? [libssl_dep] : []),
+)
+
+test('Hex Color Tests', hexcolor_tests,
+  protocol: 'tap',
+  timeout: 120,
+)
