@@ -155,7 +155,7 @@ _SSL_get_cert_info (struct cert_info *cert_info, SSL * ssl)
 {
 	X509 *peer_cert;
 	const X509_PUBKEY *key;
-	X509_ALGOR *algor = NULL;
+	ASN1_OBJECT *obj = NULL;
 	EVP_PKEY *peer_pkey;
 	char notBefore[64];
 	char notAfter[64];
@@ -174,10 +174,10 @@ _SSL_get_cert_info (struct cert_info *cert_info, SSL * ssl)
 	broke_oneline (cert_info->issuer, cert_info->issuer_word);
 
 	key = X509_get_X509_PUBKEY(peer_cert);
-	if (!X509_PUBKEY_get0_param(NULL, NULL, 0, &algor, key))
+	if (!X509_PUBKEY_get0_param(&obj, NULL, NULL, NULL, key))
 		return 1;
 
-	alg = OBJ_obj2nid (algor->algorithm);
+	alg = OBJ_obj2nid (obj);
 #ifndef HAVE_X509_GET_SIGNATURE_NID
 	sign_alg = OBJ_obj2nid (peer_cert->sig_alg->algorithm);
 #else
