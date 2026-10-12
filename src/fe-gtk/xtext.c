@@ -35,6 +35,7 @@
 #include "../common/zoitechat.h"
 #include "../common/fe.h"
 #include "../common/util.h"
+#include "../common/hexcolor.h"
 #include "../common/zoitechatc.h"
 #include "../common/url.h"
 

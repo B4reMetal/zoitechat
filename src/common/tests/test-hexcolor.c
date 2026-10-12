@@ -19,6 +19,7 @@
 
 #include <glib.h>
 
+#include "../hexcolor.h"
 #include "../util.h"
 
 static void

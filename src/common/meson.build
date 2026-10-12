@@ -25,6 +25,7 @@ common_sources = [
   'tree.c',
   'url.c',
   'userlist.c',
+  'hexcolor.c',
   'util.c'
 ]
 
@@ -201,6 +202,7 @@ test('Emoji Data Tests', emoji_data_tests,
 hexcolor_tests = executable('hexcolor_tests',
   [
     'tests/test-hexcolor.c',
+    'hexcolor.c',
     'util.c',
   ],
   include_directories: [config_h_include, include_directories('.')],
