@@ -43,6 +43,7 @@
     <ClInclude Include="typedef.h" />
     <ClInclude Include="url.h" />
     <ClInclude Include="userlist.h" />
+    <ClInclude Include="hexcolor.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="zoitechat-plugin.h" />
     <ClInclude Include="zoitechat.h" />
@@ -79,6 +80,7 @@
     <ClCompile Include="tree.c" />
     <ClCompile Include="url.c" />
     <ClCompile Include="userlist.c" />
+    <ClCompile Include="hexcolor.c" />
     <ClCompile Include="util.c" />
     <ClCompile Include="zoitechat.c" />
     <ClCompile Include="theme-service.c" />

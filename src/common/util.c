@@ -47,6 +47,7 @@
 #include "zoitechatc.h"
 #include <ctype.h>
 #include "util.h"
+#include "hexcolor.h"
 
 #if defined (__FreeBSD__) || defined (__APPLE__)
 #include <sys/sysctl.h>
@@ -329,6 +330,14 @@ strip_color2 (const char *src, int len, char *dst, int flags)
 			case '\003':			  /*ATTR_COLOR: */
 				if (!(flags & STRIP_COLOR)) goto pass_char;
 				rcol = 2;
+				break;
+			case '\004':			  /*ATTR_HEXCOLOR: */
+				if (!(flags & STRIP_COLOR)) goto pass_char;
+				{
+					int skip = hexcolor_parse (src + 1, len, NULL, NULL, NULL);
+					src += skip;
+					len -= skip;
+				}
 				break;
 			case HIDDEN_CHAR:	/* CL: invisible text (for event formats only) */	/* this takes care of the topic */
 				if (!(flags & STRIP_HIDDEN)) goto pass_char;
