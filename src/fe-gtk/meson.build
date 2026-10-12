@@ -278,3 +278,10 @@ test('Emoji Font Tests', emoji_font_tests,
   protocol: 'tap',
   timeout: 120,
 )
+
+xtext_tests = executable('xtext_tests',
+  'tests/test-xtext.c',
+  include_directories: [config_h_include],
+  dependencies: [gtk_dep],
+)
+test('XText Tests', xtext_tests, protocol: 'tap', timeout: 120)
